@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flight Booking Simulator</title>
+<style>
+body { font-family: Arial; margin: 20px; }
+h1,h2 { color:#333; }
+input,button { padding:5px 10px; margin:5px; }
+button { cursor:pointer; background:#007BFF; color:white; border:none; border-radius:4px; }
+button:hover { background:#0056b3; }
+table { border-collapse:collapse; width:100%; margin-top:10px; }
+th,td { border:1px solid #ccc; padding:8px; text-align:center; }
+pre { background:#f9f9f9; padding:10px; border:1px solid #ccc; }
+</style>
+</head>
+<body>
+<h1>Flight Booking Simulator - Milestone 4</h1>
+
+<section>
+<h2>Search Flights</h2>
+<input type="text" id="origin" placeholder="Origin">
+<input type="text" id="destination" placeholder="Destination">
+<button onclick="searchFlights()">Search</button>
+<table id="results-table">
+<thead>
+<tr>
+<th>Flight</th><th>Origin</th><th>Destination</th><th>Departure</th><th>Arrival</th>
+<th>Base Fare</th><th>Dynamic Price</th><th>Select</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+
+<section>
+<h2>Book Flight</h2>
+<form onsubmit="bookFlight(event)">
+<input type="hidden" id="flight_id">
+<input type="number" id="passenger_id" placeholder="Passenger ID" required>
+<input type="text" id="seat_no" placeholder="Seat No (optional)">
+<button type="submit">Confirm Booking</button>
+</form>
+<pre id="booking-result"></pre>
+</section>
+
+<script>
+const API="http://127.0.0.1:8000";
+async function searchFlights(){
+const origin=document.getElementById("origin").value;
+const destination=document.getElementById("destination").value;
+const res=await fetch(`${API}/flights?origin=${origin}&destination=${destination}`);
+const flights=await res.json();
+const tbody=document.querySelector("#results-table tbody");
+tbody.innerHTML="";
+flights.forEach(f=>{
+const tr=document.createElement("tr");
+tr.innerHTML=`<td>${f.flight_number}</td><td>${f.origin}</td><td>${f.destination}</td>
+<td>${f.departure_time}</td><td>${f.arrival_time}</td><td>${f.base_fare}</td><td>${f.dynamic_price}</td>
+<td><button onclick="selectFlight(${f.flight_id})">Select</button></td>`;
+tbody.appendChild(tr);
+});
+}
+function selectFlight(id){document.getElementById("flight_id").value=id; alert("Flight selected!");}
+async function bookFlight(event){
+event.preventDefault();
+const flight_id=parseInt(document.getElementById("flight_id").value);
+const passenger_id=parseInt(document.getElementById("passenger_id").value);
+const seat_no=document.getElementById("seat_no").value||null;
+const res=await fetch(`${API}/book`,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({flight_id,passenger_id,seat_no})
+});
+const data=await res.json();
+document.getElementById("booking-result").innerText=JSON.stringify(data,null,2);
+const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url; a.download=`booking_${data.pnr||data.booking_id}.json`; a.click();
+URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
