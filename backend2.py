@@ -26,7 +26,7 @@ from sqlalchemy.orm import sessionmaker
 # -------------------------------
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "mysql+pymysql://root:Cherry%402005@localhost:3306/flights"
+    "mysql+pymysql://root:Cherry@2005@localhost:3306/flights"
 )
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
@@ -325,4 +325,5 @@ async def start_background_tasks():
 # -------------------------------
 @app.get("/health")
 def health():
+
     return {"status": "ok"}
